@@ -50,6 +50,24 @@ class Symbol:
         return self.source is not None
 
 
+def _replace_prefix(prefix, suffix, nm_name):
+    if nm_name.startswith(prefix):
+        return nm_name[len(prefix):] + suffix
+    else:
+        return nm_name
+
+
+def _replace_nm_prefixes(nm_name):
+    prefixes = (
+        ('non-virtual thunk to ', '::[non-virtual thunk]'),
+        ('vtable for ', '::[vtable]')
+    )
+    for p in prefixes:
+        if nm_name.startswith(p[0]):
+            return nm_name[len(p[0]):] + p[1]
+    return nm_name
+
+
 def parse_line(line):
     if type(line) is bytes:
         line = line.decode('utf8').strip()
@@ -59,6 +77,8 @@ def parse_line(line):
     symbol_type = SymbolType.from_chr(m.group(3))
 
     name, _, source_info = m.group(4).partition('\t')
+    name = _replace_nm_prefixes(name)
+
     if source_info != '':
         filename, _, line_number = source_info.partition(':')
         source = Source(filename, line_number)
