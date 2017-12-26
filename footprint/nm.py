@@ -23,18 +23,31 @@ class SymbolType(Enum):
         return SymbolType(ord(c))
 
 
+class Source:
+    def __init__(self, filename, line_number):
+        self.file = filename
+        self.line = line_number
+
+
 class Symbol:
-    def __init__(self, addr, size, type, name):
+    def __init__(self, *, address: int, size: int, symbol_type: SymbolType, name: str, source: Source, original: str):
         self.name = name
-        self.type = type
+        self.type = symbol_type
         self.size = size
-        self.addr = addr
+        self.address = address
+        self.source = source
+        self.original = original
 
     def __str__(self):
-        if self.size is not None:
-            return '{} - {}B'.format(self.name, self.size)
-        else:
-            return self.name
+        size_suffix = ' {}B'.format(self.size) if self.size is not None else ''
+        source_suffix = ' from {}'.format(self.source) if self.source else ''
+        return '<{}>{}{}'.format(self.name, size_suffix, source_suffix)
+
+    def has_size(self):
+        return self.size is not None
+
+    def has_source(self):
+        return self.source is not None
 
 
 def parse_line(line):
@@ -43,23 +56,13 @@ def parse_line(line):
     m = _line_pattern.match(line)
     address = int(m.group(1), 16) if m.group(1) else None
     size = int(m.group(2), 16) if m.group(2) else None
+    symbol_type = SymbolType.from_chr(m.group(3))
 
-    name = m.group(4)
-    return Symbol(address, size, SymbolType.from_chr(m.group(3)), name)
+    name, _, source_info = m.group(4).partition('\t')
+    if source_info != '':
+        filename, _, line_number = source_info.partition(':')
+        source = Source(filename, line_number)
+    else:
+        source = None
 
-    # name = tokens[-1].decode('utf8')
-    # type = tokens[-2].decode('utf8')
-    #
-    # if len(tokens) > 4:
-    #     raise ValueError("Too many tokens")
-    #
-    # if len(tokens) >= 3:
-    #     addr = int(tokens[0], 16)
-    # else:
-    #     addr = None
-    #
-    # if len(tokens) == 4:
-    #     size = int(tokens[1], 16)
-    # else:
-    #     size = 0
-    # return NmEntry(addr=addr, size=size, type=type, name=name)
+    return Symbol(address=address, size=size, symbol_type=symbol_type, name=name, source=source, original=line.strip())

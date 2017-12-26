@@ -4,9 +4,9 @@ from nose.tools import *
 
 
 class LineParsingTest(unittest.TestCase):
-    def test_extracts_address(self):
+    def test_extracts_addressess(self):
         symbol = nm.parse_line(b'00031456 00000010 t ._433')
-        assert_equal(symbol.addr, int(b'00031456', 16))
+        assert_equal(symbol.address, int(b'00031456', 16))
 
     def test_extracts_size(self):
         symbol = nm.parse_line(b'00031456 00000010 t ._433')
@@ -22,14 +22,14 @@ class LineParsingTest(unittest.TestCase):
 
     def test_parses_symbol_without_size(self):
         symbol = nm.parse_line(b'0002fbe1 T __aeabi_drsub')
-        assert_equal(symbol.addr, int(b'0002fbe1', 16))
+        assert_equal(symbol.address, int(b'0002fbe1', 16))
         assert_is_none(symbol.size)
         assert_equal(symbol.name, '__aeabi_drsub')
         assert_equal(symbol.type, nm.SymbolType.Text)
 
-    def test_parses_symbol_without_size_and_address(self):
+    def test_parses_symbol_without_size_and_addressess(self):
         symbol = nm.parse_line(b'w atexit')
-        assert_is_none(symbol.addr)
+        assert_is_none(symbol.address)
         assert_is_none(symbol.size)
         assert_equal(symbol.name, 'atexit')
         assert_equal(symbol.type, nm.SymbolType.Weak)
